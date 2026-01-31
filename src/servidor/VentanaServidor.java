@@ -139,6 +139,18 @@ public class VentanaServidor extends javax.swing.JFrame {
 
     private void bDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDesconectarActionPerformed
         conectar = false;
+        bConectar.setEnabled(true);
+        
+        try {
+            if (servidor != null && !servidor.isClosed()) {
+                servidor.close();
+                servidor = new ServerSocket(61000); // Recrear para futuras conexiones
+            }
+        } catch (IOException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cerrar servidor", ex);
+        }
+        
+        jLabel2.setText("Desconectado");
         System.out.println("Ventana servidor desconectada");
     }//GEN-LAST:event_bDesconectarActionPerformed
 

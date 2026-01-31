@@ -20,8 +20,9 @@ public class ChatServidor extends javax.swing.JDialog {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ChatServidor.class.getName());
     private BufferedReader br;
     private BufferedWriter bw;
-    private String mensajeRecibido;
-    private String mensajeRespuesta;
+    private Socket socket;
+    private Thread hiloLectura;
+    private boolean activo = true;
     
     /**
      * Creates new form ChatServidor
@@ -33,27 +34,18 @@ public class ChatServidor extends javax.swing.JDialog {
     
     public ChatServidor(java.awt.Frame parent, boolean modal, Socket socket) {
         super(parent, modal);
+        this.socket = socket;
         initComponents();
         
         try {
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            
-            mensajeRecibido = br.readLine();
-            while(mensajeRecibido != null){
-                jTextArea1.setText(mensajeRecibido);
-             
-                mensajeRecibido = br.readLine();
-            }
+        
+
+            iniciarLectura();
         } catch (IOException ex) {
-            System.getLogger(ChatServidor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-//        } finally {
-//            try {
-//                br.close();
-//            } catch (IOException ex) {
-//                System.getLogger(ChatServidor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-//            }
-        }
+            logger.log(java.util.logging.Level.SEVERE, "Error al configurar streams", ex);
+            cerrarConexion();        }
     }
 
     /**
@@ -73,6 +65,11 @@ public class ChatServidor extends javax.swing.JDialog {
         jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
@@ -126,16 +123,68 @@ public class ChatServidor extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bEnviarActionPerformed
-        try {
-            mensajeRespuesta = jTextArea2.getText();
-            bw.write(mensajeRespuesta + "\n");
-            bw.flush();
-        } catch (IOException ex) {
-            System.out.println("Error al enviar el mensaje.");
-            System.getLogger(ChatServidor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        String respuesta = jTextArea2.getText().trim();
+        
+        if (!respuesta.isEmpty() && activo) {
+            try {
+                bw.write(respuesta + "\n");
+                bw.flush();
+                
+                jTextArea1.append("Servidor: " + respuesta + "\n");
+                jTextArea2.setText("");
+                
+            } catch (IOException ex) {
+                logger.log(java.util.logging.Level.SEVERE, "Error al enviar mensaje", ex);
+                javax.swing.JOptionPane.showMessageDialog(this, 
+                    "Error al enviar el mensaje.", 
+                    "Error", 
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
         }
     }//GEN-LAST:event_bEnviarActionPerformed
 
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        cerrarConexion();
+    }//GEN-LAST:event_formWindowClosing
+
+    
+    private void iniciarLectura() {
+        hiloLectura = new Thread(() -> {
+            try {
+                String mensaje;
+                while (activo && (mensaje = br.readLine()) != null) {
+                    final String mensajeFinal = mensaje;
+                    
+                    // Actualizar UI en el EDT
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        jTextArea1.append("Cliente: " + mensajeFinal + "\n");
+                    });
+                }
+            } catch (IOException ex) {
+                if (activo) {
+                    logger.log(java.util.logging.Level.SEVERE, "Error al leer mensaje", ex);
+                }
+            } finally {
+                cerrarConexion();
+            }
+        });
+        hiloLectura.start();
+    }
+    
+    private void cerrarConexion() {
+        activo = false;
+        try {
+            if (br != null) br.close();
+            if (bw != null) bw.close();
+            if (socket != null && !socket.isClosed()) socket.close();
+        } catch (IOException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al cerrar conexión", ex);
+        }
+        
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            dispose();
+        });
+    }
     /**
      * @param args the command line arguments
      */
