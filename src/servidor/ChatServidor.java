@@ -170,17 +170,17 @@ public class ChatServidor extends javax.swing.JDialog {
                         jTServidorConversacion.append("Cliente: " + mensajeFinal + "\n");
                     });
                 }
+                 // Si llegamos aquí, el cliente cerró la conexión normalmente
+                if (activo) {
+                    System.out.println("Cliente cerró la conexión");
+                    cerrarConexion();
+                }
             } catch (IOException ex) {
                 // Solo registrar si es un error inesperado (no cierre normal)
                 if (activo) {
-                    logger.log(java.util.logging.Level.WARNING, "Conexión cerrada por el cliente", ex);
-                }
-            } finally {
-                // Si el cliente cerró la conexión, cerrar todo
-                if (activo) {
-                    cerrarConexion();
-                }
-            }
+                    logger.log(java.util.logging.Level.WARNING, "Error al leer mensaje del cliente", ex);
+                    cerrarConexion();                }
+            } 
         });
         hiloLectura.start();
     }
@@ -217,7 +217,7 @@ public class ChatServidor extends javax.swing.JDialog {
             bw.flush();
             
             // Mostrar en el área de texto del servidor
-            jTServidorConversacion.append("Servidor: " + mensajeBienvenida + "\n");
+//            jTServidorConversacion.append("Servidor: " + mensajeBienvenida + "\n");
             
         } catch (IOException ex) {
             logger.log(java.util.logging.Level.SEVERE, "Error al enviar mensaje de bienvenida", ex);
