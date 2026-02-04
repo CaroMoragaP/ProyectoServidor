@@ -58,11 +58,12 @@ public class ChatServidor extends javax.swing.JDialog {
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
+        jTServidorConversacion = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
+        jTServidorRespuesta = new javax.swing.JTextArea();
         bEnviar = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -71,13 +72,14 @@ public class ChatServidor extends javax.swing.JDialog {
             }
         });
 
-        jTextArea1.setColumns(20);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
+        jTServidorConversacion.setColumns(20);
+        jTServidorConversacion.setRows(5);
+        jTServidorConversacion.setEnabled(false);
+        jScrollPane1.setViewportView(jTServidorConversacion);
 
-        jTextArea2.setColumns(20);
-        jTextArea2.setRows(5);
-        jScrollPane2.setViewportView(jTextArea2);
+        jTServidorRespuesta.setColumns(20);
+        jTServidorRespuesta.setRows(5);
+        jScrollPane2.setViewportView(jTServidorRespuesta);
 
         bEnviar.setText("Enviar");
         bEnviar.addActionListener(new java.awt.event.ActionListener() {
@@ -88,50 +90,56 @@ public class ChatServidor extends javax.swing.JDialog {
 
         jLabel1.setText("Introduzca su respuesta:");
 
+        jLabel2.setText("CHAT CON CLIENTE");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                        .addGap(38, 38, 38)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(bEnviar)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(128, Short.MAX_VALUE))
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addContainerGap()
+                            .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                            .addGap(38, 38, 38)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(bEnviar)
+                                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap(41, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(35, 35, 35)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel1)
-                .addGap(1, 1, 1)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(28, 28, 28)
+                .addComponent(jLabel2)
                 .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(13, 13, 13)
                 .addComponent(bEnviar)
-                .addContainerGap(23, Short.MAX_VALUE))
+                .addGap(23, 23, 23))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void bEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bEnviarActionPerformed
-        String respuesta = jTextArea2.getText().trim();
+        String respuesta = jTServidorRespuesta.getText().trim();
         
         if (!respuesta.isEmpty() && activo) {
             try {
                 bw.write(respuesta + "\n");
                 bw.flush();
                 
-                jTextArea1.append("Servidor: " + respuesta + "\n");
-                jTextArea2.setText("");
+                jTServidorConversacion.append("Servidor: " + respuesta + "\n");
+                jTServidorRespuesta.setText("");
                 
             } catch (IOException ex) {
                 logger.log(java.util.logging.Level.SEVERE, "Error al enviar mensaje", ex);
@@ -157,15 +165,19 @@ public class ChatServidor extends javax.swing.JDialog {
                     
                     // Actualizar UI en el EDT
                     javax.swing.SwingUtilities.invokeLater(() -> {
-                        jTextArea1.append("Cliente: " + mensajeFinal + "\n");
+                        jTServidorConversacion.append("Cliente: " + mensajeFinal + "\n");
                     });
                 }
             } catch (IOException ex) {
+                // Solo registrar si es un error inesperado (no cierre normal)
                 if (activo) {
-                    logger.log(java.util.logging.Level.SEVERE, "Error al leer mensaje", ex);
+                    logger.log(java.util.logging.Level.WARNING, "Conexión cerrada por el cliente", ex);
                 }
             } finally {
-                cerrarConexion();
+                // Si el cliente cerró la conexión, cerrar todo
+                if (activo) {
+                    cerrarConexion();
+                }
             }
         });
         hiloLectura.start();
@@ -174,11 +186,21 @@ public class ChatServidor extends javax.swing.JDialog {
     private void cerrarConexion() {
         activo = false;
         try {
+            if (socket != null && !socket.isClosed()) socket.close();
             if (br != null) br.close();
             if (bw != null) bw.close();
-            if (socket != null && !socket.isClosed()) socket.close();
+            
         } catch (IOException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "Error al cerrar conexión", ex);
+            //logger.log(java.util.logging.Level.SEVERE, "Error al cerrar conexión", ex);
+        }
+        
+        // Esperar a que termine el hilo de lectura
+        if (hiloLectura != null && hiloLectura.isAlive()) {
+            try {
+                hiloLectura.join(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         
         javax.swing.SwingUtilities.invokeLater(() -> {
@@ -225,9 +247,10 @@ public class ChatServidor extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bEnviar;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
+    private javax.swing.JTextArea jTServidorConversacion;
+    private javax.swing.JTextArea jTServidorRespuesta;
     // End of variables declaration//GEN-END:variables
 }

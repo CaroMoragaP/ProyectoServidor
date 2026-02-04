@@ -24,7 +24,8 @@ public class VentanaServidor extends javax.swing.JFrame {
      */
     public VentanaServidor() {
         initComponents();
-
+        bDesconectar.setEnabled(false);
+        
         try {
             servidor = new ServerSocket(61000);   
         } catch (IOException ex) {
@@ -107,7 +108,7 @@ public class VentanaServidor extends javax.swing.JFrame {
         if(!conectar){
             conectar = true;
             bConectar.setEnabled(false);
-            
+            bDesconectar.setEnabled(true);
             // Crear hilo para escuchar clientes
             hiloServidor = new Thread(() -> {
                 javax.swing.SwingUtilities.invokeLater(() -> {
@@ -122,8 +123,9 @@ public class VentanaServidor extends javax.swing.JFrame {
                         // Actualizar UI en el EDT
                         javax.swing.SwingUtilities.invokeLater(() -> {
                             jLabel2.setText("Cliente conectado desde: " + socket.getInetAddress());
-                            ChatServidor chatServidor = new ChatServidor(this, false, socket);
+                            ChatServidor chatServidor = new ChatServidor(VentanaServidor.this, false, socket);
                             chatServidor.setVisible(true);
+                            jLabel2.setText("Esperando clientes...");
                         });
                         
                     } catch (IOException ex) {
@@ -140,18 +142,42 @@ public class VentanaServidor extends javax.swing.JFrame {
     private void bDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDesconectarActionPerformed
         conectar = false;
         bConectar.setEnabled(true);
+        bDesconectar.setEnabled(false);
+        jLabel2.setText("Desconectando...");
         
-        try {
-            if (servidor != null && !servidor.isClosed()) {
-                servidor.close();
-                servidor = new ServerSocket(61000); // Recrear para futuras conexiones
+// Cerrar el servidor en un hilo separado para no bloquear
+        new Thread(() -> {
+            try {
+                if (servidor != null && !servidor.isClosed()) {
+                    servidor.close();
+                }
+                
+                // Esperar a que termine el hilo del servidor
+                if (hiloServidor != null && hiloServidor.isAlive()) {
+                    hiloServidor.join(2000); // Esperar máximo 2 segundos
+                }
+                
+                // Recrear el servidor para futuras conexiones
+                servidor = new ServerSocket(61000);
+                
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    jLabel2.setText("Desconectado");
+                    bDesconectar.setEnabled(true);
+                });
+                
+                System.out.println("Ventana servidor desconectada");
+                
+            } catch (IOException ex) {
+                logger.log(java.util.logging.Level.SEVERE, "Error al cerrar servidor", ex);
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    jLabel2.setText("Error al desconectar");
+                    bDesconectar.setEnabled(true);
+                });
+            } catch (InterruptedException ex) {
+                logger.log(java.util.logging.Level.SEVERE, "Interrupción al esperar cierre", ex);
+                Thread.currentThread().interrupt();
             }
-        } catch (IOException ex) {
-            logger.log(java.util.logging.Level.SEVERE, "Error al cerrar servidor", ex);
-        }
-        
-        jLabel2.setText("Desconectado");
-        System.out.println("Ventana servidor desconectada");
+        }).start();
     }//GEN-LAST:event_bDesconectarActionPerformed
 
     /**
