@@ -36,11 +36,13 @@ public class ChatServidor extends javax.swing.JDialog {
         super(parent, modal);
         this.socket = socket;
         initComponents();
+        this.setTitle("ATENCIÓN AL CLIENTE");
         
         try {
             br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
         
+            enviarMensajeBienvenida();
 
             iniciarLectura();
         } catch (IOException ex) {
@@ -207,6 +209,21 @@ public class ChatServidor extends javax.swing.JDialog {
             dispose();
         });
     }
+    
+     private void enviarMensajeBienvenida() {
+        try {
+            String mensajeBienvenida = "Bienvenido a Servicio de Atención al cliente, indíquenos en qué podemos ayudarlo";
+            bw.write(mensajeBienvenida + "\n");
+            bw.flush();
+            
+            // Mostrar en el área de texto del servidor
+            jTServidorConversacion.append("Servidor: " + mensajeBienvenida + "\n");
+            
+        } catch (IOException ex) {
+            logger.log(java.util.logging.Level.SEVERE, "Error al enviar mensaje de bienvenida", ex);
+        }
+    }
+    
     /**
      * @param args the command line arguments
      */

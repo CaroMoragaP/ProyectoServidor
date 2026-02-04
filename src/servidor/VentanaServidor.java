@@ -4,6 +4,7 @@
  */
 package servidor;
 
+import java.awt.Toolkit;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,6 +25,11 @@ public class VentanaServidor extends javax.swing.JFrame {
      */
     public VentanaServidor() {
         initComponents();
+        this.setTitle("SERVIDOR");
+        // Ventana en esquina superior derecha
+        int x = Toolkit.getDefaultToolkit().getScreenSize().width - this.getWidth();
+        this.setLocation(x, 0);
+        
         bDesconectar.setEnabled(false);
         
         try {
@@ -74,31 +80,27 @@ public class VentanaServidor extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(65, 65, 65)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addContainerGap(233, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(bConectar)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(bDesconectar)
-                        .addGap(88, 88, 88))))
+                        .addGap(42, 42, 42)
+                        .addComponent(bDesconectar))
+                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(0, 65, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(36, 36, 36)
                 .addComponent(jLabel1)
-                .addGap(52, 52, 52)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel2)
+                .addGap(24, 24, 24)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(bConectar)
                     .addComponent(bDesconectar))
-                .addGap(28, 28, 28)
-                .addComponent(jLabel2)
-                .addContainerGap(129, Short.MAX_VALUE))
+                .addContainerGap(36, Short.MAX_VALUE))
         );
 
         pack();
@@ -140,44 +142,45 @@ public class VentanaServidor extends javax.swing.JFrame {
     }//GEN-LAST:event_bConectarActionPerformed
 
     private void bDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDesconectarActionPerformed
-        conectar = false;
-        bConectar.setEnabled(true);
-        bDesconectar.setEnabled(false);
-        jLabel2.setText("Desconectando...");
-        
-// Cerrar el servidor en un hilo separado para no bloquear
-        new Thread(() -> {
-            try {
-                if (servidor != null && !servidor.isClosed()) {
-                    servidor.close();
+        if(conectar){
+            conectar = false;
+            bConectar.setEnabled(true);
+            bDesconectar.setEnabled(false);
+            jLabel2.setText("Desconectando...");
+
+    // Cerrar el servidor en un hilo separado para no bloquear
+            new Thread(() -> {
+                try {
+                    if (servidor != null && !servidor.isClosed()) {
+                        servidor.close();
+                    }
+
+                    // Esperar a que termine el hilo del servidor
+                    if (hiloServidor != null && hiloServidor.isAlive()) {
+                        hiloServidor.join(2000); // Esperar máximo 2 segundos
+                    }
+
+                    // Recrear el servidor para futuras conexiones
+                    servidor = new ServerSocket(61000);
+
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        jLabel2.setText("Desconectado");
+                    });
+
+                    System.out.println("Ventana servidor desconectada");
+
+                } catch (IOException ex) {
+                    logger.log(java.util.logging.Level.SEVERE, "Error al cerrar servidor", ex);
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        jLabel2.setText("Error al desconectar");
+                        bDesconectar.setEnabled(true);
+                    });
+                } catch (InterruptedException ex) {
+                    logger.log(java.util.logging.Level.SEVERE, "Interrupción al esperar cierre", ex);
+                    Thread.currentThread().interrupt();
                 }
-                
-                // Esperar a que termine el hilo del servidor
-                if (hiloServidor != null && hiloServidor.isAlive()) {
-                    hiloServidor.join(2000); // Esperar máximo 2 segundos
-                }
-                
-                // Recrear el servidor para futuras conexiones
-                servidor = new ServerSocket(61000);
-                
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    jLabel2.setText("Desconectado");
-                    bDesconectar.setEnabled(true);
-                });
-                
-                System.out.println("Ventana servidor desconectada");
-                
-            } catch (IOException ex) {
-                logger.log(java.util.logging.Level.SEVERE, "Error al cerrar servidor", ex);
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    jLabel2.setText("Error al desconectar");
-                    bDesconectar.setEnabled(true);
-                });
-            } catch (InterruptedException ex) {
-                logger.log(java.util.logging.Level.SEVERE, "Interrupción al esperar cierre", ex);
-                Thread.currentThread().interrupt();
-            }
-        }).start();
+            }).start();
+        }
     }//GEN-LAST:event_bDesconectarActionPerformed
 
     /**
